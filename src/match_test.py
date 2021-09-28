@@ -9,9 +9,9 @@ with open('/src/shelf_matching/data/settings.json', 'r') as f:
 with open('/src/shelf_matching/data/user_settings.json', 'r') as f:
     USER_SETTINGS = json.load(f)
 
-POV_IMAGES_DIR = USER_SETTINGS['DIR_POV']
-OUTPUT_DIR     = SETTINGS['DIR_OUTPUT']
-PARAM_PATH     = SETTINGS['PARAMS_PATH']
+POV_IMAGES_DIR = USER_SETTINGS['POV_DIR']
+OUTPUT_DIR     = SETTINGS['OUTPUT_DIR']
+PARAM_PATH     = SETTINGS['PARAM_PATH']
 
 
 if __name__ == '__main__':

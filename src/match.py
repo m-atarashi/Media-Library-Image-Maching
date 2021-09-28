@@ -18,25 +18,23 @@ import preprocessing
 from utils import utils
 
 
-with open('/src/shelf_matching/data/settings.json', 'r') as f:
-    SETTINGS = json.load(f)
 with open('/src/shelf_matching/data/user_settings.json', 'r') as f:
     USER_SETTINGS = json.load(f)
 
-USERNAME = USER_SETTINGS['USERNAME']
-DATE     = USER_SETTINGS['DATE']
-VIDEO_ID = USER_SETTINGS['VIDEO_ID']
+USERNAME      = USER_SETTINGS['USERNAME']
+SHOOTING_DATE = USER_SETTINGS['SHOOTING_DATE']
+VIDEO_ID      = USER_SETTINGS['VIDEO_ID']
 
-DETECTOR_NAME       = SETTINGS['DETECTOR_STR']
-HESSIAN_THRESHOLD   = SETTINGS['THRESHOLD_HESSIAN']
-THRESHOLDS_DISTANCE = SETTINGS['THRESHOLDS_DISTANCE'][DETECTOR_NAME]
-kNN_RATIO           = SETTINGS['kNN_RATIOS'][DETECTOR_NAME]
+with open('/src/shelf_matching/data/settings.json', 'r') as f:
+    SETTINGS = json.load(f)
 
-LOSS_WEIGHTS = SETTINGS['LOSS_WEIGHTS']
-DISPLAY_NUM  = SETTINGS['DISPLAY_NUM']
-
-SHELF_LABELS = [os.path.basename(path)[:-4] for path in 
-                utils.glob_extensions(['jpg', 'JPG', 'png', 'PNG'], SETTINGS['DIR_SHELF'])]
+DETECTOR_NAME                   = SETTINGS['DETECTOR']
+HESSIAN_THRESHOLD               = SETTINGS['HESSIAN_THRESHOLD']
+DESCRIPTION_DISTANCE_THRESHOLDS = SETTINGS['DESCRIPTION_DISTANCE_THRESHOLDS'][DETECTOR_NAME]
+kNN_RATIO                       = SETTINGS['kNN_RATIOS'][DETECTOR_NAME]
+LOSS_WEIGHTS                    = SETTINGS['LOSS_WEIGHTS']
+DISPLAY_COLS_NUM                = SETTINGS['DISPLAY_COLS_NUM']
+SHELF_LABELS                    = [os.path.basename(path)[:-4] for path in utils.glob_extensions(['jpg', 'JPG', 'png', 'PNG'], SETTINGS['SHELF_DIR'])]
 
 
 def match_over_all_shelves(pov_images_dir, shelf_descriptors):
@@ -105,7 +103,7 @@ def nns_over_all_shelves(pov_image, shelf_descriptors, gpu_resources):
 
     for shelf_descriptor in shelf_descriptors:
         D, _ = nns.faiss_knnmatch(gpu_resources, shelf_descriptor, pov_descriptor, is_binary)
-        indices = (D[:, 0] < kNN_RATIO*D[:, 1]) & (D[:, 0] < THRESHOLDS_DISTANCE)
+        indices = (D[:, 0] < kNN_RATIO*D[:, 1]) & (D[:, 0] < DESCRIPTION_DISTANCE_THRESHOLDS)
         distances.append(D[indices, 0])
     
     distances = np.array(distances, dtype = object)
@@ -128,8 +126,8 @@ def compute_result_table(distances):
     shelf_labels = itemgetter(*indices)(SHELF_LABELS)
     counts       = [len(d) for d in distances]
     distances    = [np.mean(d) for d in distances]
-    losses       = LOSS_WEIGHTS['LOSS_DISTANCE'] * stats.zscore(distances) - \
-                   LOSS_WEIGHTS['LOSS_COUNT']    * stats.zscore(counts)
+    losses       = LOSS_WEIGHTS['DISTANCE_WEIGTH'] * stats.zscore(distances) - \
+                   LOSS_WEIGHTS['COUNT_WEIGHT']    * stats.zscore(counts)
 
     df = pd.DataFrame({'Shelf'   : shelf_labels,
                        'Count'   : counts,
@@ -137,20 +135,20 @@ def compute_result_table(distances):
                        'Loss'    : losses},
                        columns = ['Shelf', 'Count', 'Distance', 'Loss'])
     df = df.sort_values('Loss')
-    print(df.iloc[:DISPLAY_NUM, :].to_string(index=False))
+    print(df.iloc[:DISPLAY_COLS_NUM, :].to_string(index=False))
 
     return df
 
 
 def write_csv(dir, inputs, answers):
     df   = pd.DataFrame({'Input': inputs, 'Answers': answers}, columns=['Input', 'Answers'])
-    path = f'{dir}/{USERNAME}_{DATE}_{VIDEO_ID}.csv'
+    path = f'{dir}/{USERNAME}_{SHOOTING_DATE}_{VIDEO_ID}.csv'
     df.to_csv(path, index=False)
 
 
 def write_totalled_result(dir, answers):
     data = dict(Counter(answers))
-    path = f'{dir}/{USERNAME}_{DATE}_{VIDEO_ID}_totalled_result.json'
+    path = f'{dir}/{USERNAME}_{SHOOTING_DATE}_{VIDEO_ID}_totalled_result.json'
 
     with open(path, mode='w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -159,15 +157,15 @@ def write_totalled_result(dir, answers):
 def write_setting(dir):
     data = {
         'username'          : USERNAME,
-        'date'              : DATE,
+        'date'              : SHOOTING_DATE,
         'video_id'          : VIDEO_ID,
         'detector'          : DETECTOR_NAME,
         'hessian_threshold' : HESSIAN_THRESHOLD,
-        'distance_threshold': THRESHOLDS_DISTANCE,
+        'distance_threshold': DESCRIPTION_DISTANCE_THRESHOLDS,
         'k-NN ratio'        : kNN_RATIO,
         'loss_weight'       : LOSS_WEIGHTS
     }
-    path = f'{dir}/{USERNAME}_{DATE}_{VIDEO_ID}_setting.json'
+    path = f'{dir}/{USERNAME}_{SHOOTING_DATE}_{VIDEO_ID}_setting.json'
     with open(path, mode='w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 

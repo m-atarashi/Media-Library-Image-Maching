@@ -1,13 +1,12 @@
 {
-    "DIR_SHELF": "/shelf/20210607/2x/",
-    "DIR_OUTPUT": "/output/",
-    "PARAMS_PATH": "/src/shelf_matching/data/akaze_descriptor.npy",
+    "SHELF_DIR": "/shelf/20210607/2x/",
+    "OUTPUT_DIR": "/output/",
+    "SHELF_DESCRIPTOR_PATH": "/src/shelf_matching/data/akaze_descriptor.npy",
     "RESIZE_RATIO": 1,
-    "THRESHOLD_MASK_SCORE":  0.5,
 
-    "DETECTOR_STR": "AKAZE",
-    "THRESHOLD_HESSIAN": 300,
-    "THRESHOLDS_DISTANCE": {
+    "DETECTOR": "AKAZE",
+    "HESSIAN_THRESHOLD": 300,
+    "DESCRIPTION_DISTANCE_THRESHOLDS": {
         "AKAZE": 400,
         "ORB": 400,
         "SIFT": 0.4,
@@ -22,11 +21,11 @@
         "SURF_CUDA": 0.4
     },
     "LOSS_WEIGHTS": {
-        "LOSS_COUNT": 0.9,
-        "LOSS_DISTANCE": 0.1
+        "COUNT_WEIGHT": 0.9,
+        "DISTANCE_WEIGTH": 0.1
     },
 
-    "DISPLAY_NUM": 10,
+    "DISPLAY_COLS_NUM": 10,
 
     "HOST": "localhost",
     "USER": "root",

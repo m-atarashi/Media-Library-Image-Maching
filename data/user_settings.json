@@ -1,6 +1,6 @@
 {
     "USERNAME": "m-atarashi",
-    "DATE": "2021-09-13",
+    "SHOOTING_DATE": "2021-09-13",
     "VIDEO_ID": 0,
-    "DIR_POV": "/pov/test/"
+    "POV_DIR": "/pov/test/"
 }

@@ -4,6 +4,11 @@ import json
 with open('/src/shelf_matching/data/settings.json', 'r') as f:
     SETTINGS = json.loads(f)
 
+HOST     = SETTINGS['HOST']
+ROOT     = SETTINGS['ROOT']
+PASSWORD = SETTINGS['PASSWORD']
+DATABASE = SETTINGS['DATABASE']
+
 
 # This programe depends on the structure of the table "logdata"
 # +----------+-------------+------+-----+-------------------+-------------------+
@@ -22,4 +27,4 @@ if __name__=='__main__':
     user_id = 'm-atarashi'
     sql = 'INSERT INTO logdata (userid, log) VALUES (%s, %s)'
     values = (user_id, shelf_counts_json)
-    database.insert_logdata_into_database(SETTINGS['HOST'], SETTINGS['ROOT'], SETTINGS['PASSWORD'], SETTINGS['DATABASE'], sql, values)
+    database.insert_logdata_into_database(HOST, ROOT, PASSWORD, DATABASE, sql, values)
