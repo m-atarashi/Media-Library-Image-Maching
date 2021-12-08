@@ -25,9 +25,16 @@ def smoothing_by_cordinate(history):
     history_y_interpolated = pd.Series(history_y).interpolate(limit_direction='both')
 
     # smoothing
-    smoothed_history_x = history_x_interpolated.ewm(com=len(history_x), adjust=False).mean().values
-    smoothed_history_y = history_y_interpolated.ewm(com=len(history_y), adjust=False).mean().values
+    method = 'WMA'
+    if method == 'WMA':
+        smoothed_history_x = np.convolve(history_y_interpolated, np.ones(11)/11, mode='same')
+        smoothed_history_y = np.convolve(history_y_interpolated, np.ones(11)/11, mode='same')
+    else:
+        smoothed_history_x = history_x_interpolated.ewm(com=len(history_x)-1, adjust=False).mean().values
+        smoothed_history_y = history_y_interpolated.ewm(com=len(history_y)-1, adjust=False).mean().values
+    
     smoothed_history = np.stack([smoothed_history_x, smoothed_history_y], axis=1)
+    print([np.linalg.norm(values-e, axis=1).argmin() for e in smoothed_history][-10:])
 
     # quantize the coordinates
     indices = [np.linalg.norm(values - e, axis=1).argmin() for e in smoothed_history]
