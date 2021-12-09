@@ -1,10 +1,12 @@
 import csv
+from glob import glob
+import os
 import numpy as np
-from numpy.core.fromnumeric import argmin
+import scipy.signal
 import pandas as pd
 
 
-def smoothing_by_cordinate(history, method='WMA'):
+def smoothing_by_cordinate(history, method='WMA', window_size=5):
     coordinates_path = './csv/shelves_coordinate.csv'
     with open(coordinates_path, 'r') as f:
         reader = csv.reader(f)
@@ -26,37 +28,41 @@ def smoothing_by_cordinate(history, method='WMA'):
 
     # smoothing
     if method == 'SMA':
-        smoothed_history_x = np.convolve(history_x_interpolated, np.ones(11)/11, mode='same')
-        smoothed_history_y = np.convolve(history_y_interpolated, np.ones(11)/11, mode='same')
+        smoothed_history_x = np.convolve(history_x_interpolated, np.ones(window_size)/window_size, mode='same')
+        smoothed_history_y = np.convolve(history_y_interpolated, np.ones(window_size)/window_size, mode='same')
     elif method == 'WMA':
         weight = lambda n: np.arange(1, n+1)[::-1]/np.sum(np.arange(1, n+1))
-        smoothed_history_x = np.convolve(history_x_interpolated, weight(11), mode='same')
-        smoothed_history_y = np.convolve(history_y_interpolated, weight(11), mode='same')
+        smoothed_history_x = np.convolve(history_x_interpolated, weight(window_size), mode='same')
+        smoothed_history_y = np.convolve(history_y_interpolated, weight(window_size), mode='same')
     elif method == 'EMA':
-        smoothed_history_x = history_x_interpolated.ewm(alpha=1/len(history_x_interpolated), adjust=True).mean().values
-        smoothed_history_y = history_y_interpolated.ewm(alpha=1/len(history_y_interpolated), adjust=True).mean().values
+        smoothed_history_x = history_x_interpolated.ewm(alpha=1/window_size, adjust=False).mean().values
+        smoothed_history_y = history_y_interpolated.ewm(alpha=1/window_size, adjust=False).mean().values
+    elif method == 'SG':
+        smoothed_history_x = scipy.signal.savgol_filter(history_x_interpolated, window_size, 2, deriv=0)
+        smoothed_history_y = scipy.signal.savgol_filter(history_y_interpolated, window_size, 2, deriv=0)
 
     smoothed_history_coordinate = np.stack([smoothed_history_x, smoothed_history_y], axis=1)
 
     # quantize the coordinates
-    indices = [np.linalg.norm(values - e, axis=1).argmin() for e in smoothed_history_coordinate]
+    indices = [np.argmin(np.linalg.norm(values - e, axis=1)) for e in smoothed_history_coordinate]
     smoothed_history = np.array(keys)[indices]
 
     return smoothed_history
 
 
 def main():
-    path = './csv/unsmoothed/ATARASHI_2021-05-18_0.csv'
-    with open(path, "r") as f:
-        reader  = csv.reader(f)
-        history = [row[1] for row in reader][1:]
+    paths = glob('./csv/unsmoothed/*.csv')
+    for path in paths:
+        with open(path, "r") as f:
+            reader  = csv.reader(f)
+            history = [row[1] for row in reader][1:]
 
-    smoothed_history = smoothing_by_cordinate(history)
+        smoothed_history = smoothing_by_cordinate(history, method='WMA', window_size=5)
 
-    path = './csv/smoothed/ATARASHI_2021-05-18_0.csv'
-    with open(path, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerows([[e] for e in smoothed_history])
+        path = './csv/smoothed/' + os.path.basename(path)
+        with open(path, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerows([[e] for e in smoothed_history])
 
 
 if __name__ == '__main__':
