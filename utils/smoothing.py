@@ -4,7 +4,7 @@ from numpy.core.fromnumeric import argmin
 import pandas as pd
 
 
-def smoothing_by_cordinate(history):
+def smoothing_by_cordinate(history, method='WMA'):
     coordinates_path = './csv/shelves_coordinate.csv'
     with open(coordinates_path, 'r') as f:
         reader = csv.reader(f)
@@ -25,19 +25,21 @@ def smoothing_by_cordinate(history):
     history_y_interpolated = pd.Series(history_y).interpolate(limit_direction='both')
 
     # smoothing
-    method = 'WMA'
-    if method == 'WMA':
-        smoothed_history_x = np.convolve(history_y_interpolated, np.ones(11)/11, mode='same')
+    if method == 'SMA':
+        smoothed_history_x = np.convolve(history_x_interpolated, np.ones(11)/11, mode='same')
         smoothed_history_y = np.convolve(history_y_interpolated, np.ones(11)/11, mode='same')
-    else:
-        smoothed_history_x = history_x_interpolated.ewm(com=len(history_x)-1, adjust=False).mean().values
-        smoothed_history_y = history_y_interpolated.ewm(com=len(history_y)-1, adjust=False).mean().values
-    
-    smoothed_history = np.stack([smoothed_history_x, smoothed_history_y], axis=1)
-    print([np.linalg.norm(values-e, axis=1).argmin() for e in smoothed_history][-10:])
+    elif method == 'WMA':
+        weight = lambda n: np.arange(1, n+1)[::-1]/np.sum(np.arange(1, n+1))
+        smoothed_history_x = np.convolve(history_x_interpolated, weight(11), mode='same')
+        smoothed_history_y = np.convolve(history_y_interpolated, weight(11), mode='same')
+    elif method == 'EMA':
+        smoothed_history_x = history_x_interpolated.ewm(alpha=1/len(history_x_interpolated), adjust=True).mean().values
+        smoothed_history_y = history_y_interpolated.ewm(alpha=1/len(history_y_interpolated), adjust=True).mean().values
+
+    smoothed_history_coordinate = np.stack([smoothed_history_x, smoothed_history_y], axis=1)
 
     # quantize the coordinates
-    indices = [np.linalg.norm(values - e, axis=1).argmin() for e in smoothed_history]
+    indices = [np.linalg.norm(values - e, axis=1).argmin() for e in smoothed_history_coordinate]
     smoothed_history = np.array(keys)[indices]
 
     return smoothed_history
