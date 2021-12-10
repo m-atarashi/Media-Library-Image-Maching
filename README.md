@@ -5,7 +5,7 @@ https://www.youtube.com/watch?v=tIrSLBLtq8o
 
 # Dependencies
 - Ubuntu >= 18.04
-- Python 3.7
+- Python 3.7.11
 - CUDA 10.1
 - Pytorch 1.7.1
 - faiss
