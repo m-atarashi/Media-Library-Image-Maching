@@ -1,9 +1,10 @@
 import csv
-from glob import glob
 import os
+from glob import glob
+
 import numpy as np
-import scipy.signal
 import pandas as pd
+import scipy.signal
 
 
 def smoothing_by_cordinate(history, method='WMA', window_size=5):
