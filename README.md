@@ -5,3 +5,5 @@
 https://www.youtube.com/watch?v=tIrSLBLtq8o
 
 # Dependencies
+- Ubuntu 20.04
+- a
