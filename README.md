@@ -6,4 +6,8 @@ https://www.youtube.com/watch?v=tIrSLBLtq8o
 
 # Dependencies
 - Ubuntu >= 18.04
-- a
+- Python 3.7
+- CUDA 10.1
+- Pytorch 1.7.1
+- faiss
+- OpenCV
